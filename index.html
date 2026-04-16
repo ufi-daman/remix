@@ -570,6 +570,13 @@ const SK_NEWS    = 'kc:news:';      // kc:news:{brandId} → {items, ts}
 const SK_HISTORY = 'kc:history';    // array of {id,title,channels,persona,ts}
 const NEWS_TTL   = 7*24*60*60*1000; // 7 dní
 
+// ══ STORAGE POLYFILL (localStorage wrapper) ══
+window.storage = {
+  get:    (key) => { const v = localStorage.getItem(key); return v ? {value: v} : null; },
+  set:    (key, value) => localStorage.setItem(key, value),
+  delete: (key) => localStorage.removeItem(key),
+};
+
 // ══════════════ INIT ══════════════
 function initBrands(){
   const cats=document.getElementById('brand-cats');
@@ -708,7 +715,6 @@ AKTUALITA: [název] | [1 věta popis] | [URL] | [URL obrázku nebo prázdné] | 
 BLOG: [název] | [1 věta popis] | [URL] | [URL obrázku nebo prázdné] | [datum YYYY-MM]
 
 Max 4 výsledky každého typu. Jen řádky začínající PRODUKT:, AKTUALITA: nebo BLOG:.`, 2000);
-    const lines=text.split('\n').filter(l=>l.trim().startsWith('NOVINKA:'));
     // parse all 3 types
     const allLines = text.split('\n').filter(l => /^(PRODUKT|AKTUALITA|BLOG):/.test(l.trim()));
     const typeMap = { 'PRODUKT':'🛍️ Produkt', 'AKTUALITA':'📰 Aktualita', 'BLOG':'✍️ Blog' };
