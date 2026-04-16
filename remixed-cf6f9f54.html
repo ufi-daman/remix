@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KC Content Generator</title>
+
+<style>
+:root{--red:#C1272D;--red-d:#9a1e22;--red-l:#fdf0f0;--char:#1a1a1a;--mid:#555;--lt:#f4f4f4;--bdr:#e2e2e2;--w:#fff;--green:#1a7a3f;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--lt);color:var(--char);line-height:1.6;font-size:14px;}
+
+/* HDR */
+.hdr{background:var(--char);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.hdr-l{display:flex;align-items:center;gap:10px;}
+.logo{width:30px;height:30px;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.htitle{font-size:15px;font-weight:800;color:#fff;letter-spacing:-0.02em;}
+.htitle span{color:var(--red);}
+.hsub{font-size:11px;color:rgba(255,255,255,0.35);}
+.hbadge{background:rgba(193,39,45,0.18);border:1px solid rgba(193,39,45,0.3);padding:4px 10px;font-size:11px;font-weight:700;color:var(--red);letter-spacing:.05em;cursor:pointer;}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - 62px);}
+.sidebar{background:var(--w);border-right:1px solid var(--bdr);padding:18px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:18px;}
+.main{overflow-y:auto;}
+
+/* TABS TOP */
+.main-tabs{display:flex;background:var(--w);border-bottom:2px solid var(--bdr);position:sticky;top:0;z-index:50;}
+.main-tab{padding:12px 18px;border:none;background:transparent;font-size:13px;font-weight:500;cursor:pointer;color:var(--mid);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;display:flex;align-items:center;gap:5px;}
+.main-tab.active{color:var(--red);font-weight:700;border-bottom-color:var(--red);}
+.main-panel{display:none;padding:24px;}
+.main-panel.active{display:block;animation:fi .2s ease;}
+
+/* SECTION LABEL */
+.slabel{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#999;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--bdr);}
+
+/* SOURCE TABS */
+.stabs{display:flex;border:1px solid var(--bdr);margin-bottom:10px;}
+.stab{flex:1;padding:8px 4px;border:none;background:transparent;font-size:12px;font-weight:500;cursor:pointer;color:var(--mid);transition:all .15s;text-align:center;border-right:1px solid var(--bdr);}
+.stab:last-child{border-right:none;}
+.stab.active{background:var(--char);color:#fff;font-weight:700;}
+
+/* INPUTS */
+textarea,input[type=text]{width:100%;padding:9px 11px;border:1px solid var(--bdr);background:var(--lt);font-family:'Inter',sans-serif;font-size:13px;color:var(--char);outline:none;transition:border .15s;resize:none;}
+textarea:focus,input[type=text]:focus{border-color:var(--red);background:var(--w);}
+textarea{min-height:90px;line-height:1.55;}
+
+/* INFO BOX */
+.info-box{background:var(--red-l);border:1px solid rgba(193,39,45,.2);padding:10px 12px;font-size:12px;line-height:1.6;color:var(--red-d);}
+
+/* BRAND GRID */
+.brand-cat{margin-bottom:10px;}
+.brand-cat-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mid);margin-bottom:5px;}
+.brand-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.brand-tile{padding:7px 9px;border:1px solid var(--bdr);background:var(--lt);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:1px;}
+.brand-tile:hover{border-color:var(--red);background:var(--red-l);}
+.brand-tile.sel{border-color:var(--red);background:var(--red-l);}
+.brand-name{font-weight:700;font-size:12px;color:var(--char);}
+.brand-tag{font-size:10px;color:var(--mid);}
+.brand-tile.sel .brand-name{color:var(--red-d);}
+
+/* FETCH BTN */
+.fetch-btn{width:100%;padding:9px;background:var(--char);border:none;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:5px;}
+.fetch-btn:hover{background:#2d2d2d;}
+.fetch-btn:disabled{background:#aaa;cursor:not-allowed;}
+
+/* CHANNELS */
+.ch-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.ch-btn{padding:8px 8px;border:1px solid var(--bdr);background:transparent;font-size:12px;font-weight:500;cursor:pointer;color:var(--mid);transition:all .15s;text-align:left;display:flex;align-items:center;gap:5px;}
+.ch-btn.sel{border-color:var(--red);background:var(--red-l);color:var(--char);font-weight:600;}
+
+/* PERSONA */
+select{width:100%;padding:9px 11px;border:1px solid var(--bdr);background:var(--lt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:13px;color:var(--char);outline:none;cursor:pointer;}
+select:focus{border-color:var(--red);}
+
+/* GEN BTN */
+.gen-btn{width:100%;padding:13px;background:var(--red);border:none;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.gen-btn:hover{background:var(--red-d);}
+.gen-btn:disabled{background:#aaa;cursor:not-allowed;}
+
+/* STATUS */
+.status-line{font-size:11px;color:var(--mid);padding:5px 0;min-height:18px;}
+
+/* ART LIST */
+.art-list{display:flex;flex-direction:column;gap:4px;margin-top:7px;max-height:200px;overflow-y:auto;}
+.art-item{padding:8px 10px;border:1px solid var(--bdr);background:var(--lt);cursor:pointer;transition:all .15s;font-size:12px;display:flex;gap:8px;align-items:flex-start;}
+.art-item:hover{border-color:var(--red);background:var(--red-l);}
+.art-item.sel-art{border-color:var(--red);background:var(--red-l);}
+.art-item-txt{flex:1;}
+.art-item-title{font-weight:600;color:var(--char);margin-bottom:1px;line-height:1.3;font-size:12px;}
+.art-item-meta{color:var(--mid);font-size:11px;}
+.art-item-img{width:42px;height:32px;object-fit:cover;border:1px solid var(--bdr);flex-shrink:0;}
+.art-cached{font-size:10px;font-weight:600;color:var(--green);background:rgba(26,122,63,.08);padding:1px 5px;display:inline-block;margin-top:2px;}
+
+/* PREVIEW */
+.preview-box{background:var(--lt);border:1px solid var(--bdr);padding:10px 12px;margin-top:7px;display:none;}
+.pb-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:4px;}
+.pb-title{font-size:13px;font-weight:700;color:var(--char);margin-bottom:3px;}
+.pb-body{font-size:12px;color:var(--mid);line-height:1.5;max-height:70px;overflow:hidden;}
+.preview-img{width:100%;max-height:100px;object-fit:contain;margin-top:6px;border:1px solid var(--bdr);background:#fff;padding:3px;}
+
+/* ── MEMORY PANEL ── */
+.mem-section{margin-bottom:24px;}
+.mem-section h3{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.mem-section h3 span{font-size:11px;font-weight:500;color:var(--mid);}
+
+.news-card{background:var(--w);border:1px solid var(--bdr);margin-bottom:8px;overflow:hidden;}
+.news-card-head{background:var(--char);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.news-card-brand{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);}
+.news-card-date{font-size:11px;color:rgba(255,255,255,.4);}
+.news-card-refresh{padding:3px 8px;background:transparent;border:1px solid rgba(255,255,255,.2);font-family:'Inter',sans-serif;font-size:10px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.5);transition:all .15s;}
+.news-card-refresh:hover{border-color:var(--red);color:var(--red);}
+.news-card-body{padding:10px 14px;}
+.news-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--bdr);cursor:pointer;transition:all .15s;}
+.news-item:last-child{border-bottom:none;}
+.news-item:hover{background:var(--red-l);margin:0 -14px;padding:5px 14px;}
+.news-item-img{width:36px;height:27px;object-fit:cover;border:1px solid var(--bdr);flex-shrink:0;}
+.news-item-txt .ni-title{font-size:12px;font-weight:600;color:var(--char);line-height:1.3;}
+.news-item-txt .ni-meta{font-size:11px;color:var(--mid);}
+.empty-news{font-size:12px;color:var(--mid);padding:8px 0;}
+
+.history-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--bdr);background:var(--w);margin-bottom:5px;cursor:pointer;transition:all .15s;}
+.history-item:hover{border-color:var(--red);background:var(--red-l);}
+.hi-title{flex:1;font-size:12px;font-weight:600;color:var(--char);}
+.hi-meta{font-size:11px;color:var(--mid);}
+.hi-channels{display:flex;gap:3px;flex-wrap:wrap;}
+.hi-ch{font-size:10px;background:var(--lt);border:1px solid var(--bdr);padding:1px 5px;color:var(--mid);}
+.hi-del{padding:3px 7px;background:transparent;border:1px solid var(--bdr);font-size:11px;cursor:pointer;color:var(--mid);font-family:'Inter',sans-serif;}
+.hi-del:hover{border-color:var(--red);color:var(--red);}
+
+.mem-empty{font-size:12px;color:var(--mid);padding:12px;text-align:center;border:1px dashed var(--bdr);}
+.mem-refresh-all{width:100%;padding:9px;background:var(--lt);border:1px solid var(--bdr);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--mid);transition:all .15s;}
+.mem-refresh-all:hover{border-color:var(--red);color:var(--red);}
+
+/* OUTPUT */
+@keyframes fi{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:340px;text-align:center;color:var(--mid);}
+.empty-ico{font-size:44px;margin-bottom:12px;opacity:.22;}
+.empty h3{font-size:17px;font-weight:800;color:var(--char);margin-bottom:5px;}
+.empty p{font-size:13px;max-width:280px;line-height:1.6;}
+
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:340px;gap:12px;}
+.spin{width:34px;height:34px;border:3px solid var(--bdr);border-top-color:var(--red);border-radius:50%;animation:sp .75s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.load-t{font-size:13px;color:var(--mid);font-weight:500;}
+
+.src-bar{background:var(--char);padding:11px 16px;margin-bottom:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.sb-ico{font-size:15px;}
+.sb-info{flex:1;}
+.sb-topic{font-size:13px;font-weight:700;color:#fff;}
+.sb-meta{font-size:11px;color:rgba(255,255,255,.38);}
+.src-img{height:32px;width:auto;max-width:70px;object-fit:contain;background:#fff;padding:3px;}
+
+.out-tabs{display:flex;border-bottom:2px solid var(--bdr);margin-bottom:20px;overflow-x:auto;}
+.out-tab{padding:10px 15px;border:none;background:transparent;font-size:13px;font-weight:500;cursor:pointer;color:var(--mid);white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;display:flex;align-items:center;gap:4px;}
+.out-tab.active{color:var(--red);font-weight:700;border-bottom-color:var(--red);}
+
+.ch-out{display:none;}
+.ch-out.active{display:block;animation:fi .2s ease;}
+
+.out-h{margin-bottom:16px;}
+.out-h h2{font-size:19px;font-weight:800;letter-spacing:-.02em;margin-bottom:2px;}
+.out-h p{font-size:12px;color:var(--mid);}
+
+.cblock{background:var(--w);border:1px solid var(--bdr);margin-bottom:10px;overflow:hidden;}
+.cb-head{background:var(--char);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.cb-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);}
+.cb-ttl{font-size:12px;font-weight:600;color:#fff;flex:1;}
+.copy-btn{padding:4px 10px;background:transparent;border:1px solid rgba(255,255,255,.2);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.55);transition:all .15s;white-space:nowrap;}
+.copy-btn:hover{border-color:var(--red);color:var(--red);}
+.cb-body{padding:16px 18px;font-size:14px;line-height:1.8;color:var(--mid);}
+.cb-body p{margin-bottom:10px;}
+.cb-body p:last-child{margin-bottom:0;}
+.cb-body strong{color:var(--char);font-weight:600;}
+.cb-body ul{padding-left:17px;margin-bottom:10px;}
+.cb-body li{margin-bottom:3px;}
+.cb-body h4{font-size:14px;font-weight:700;color:var(--char);margin:12px 0 6px;}
+.cb-body h4:first-child{margin-top:0;}
+.ht{color:#5851DB;font-size:13px;}
+.out-img{max-width:200px;border:1px solid var(--bdr);padding:5px;background:#fff;margin-bottom:12px;display:block;}
+.img-cap{font-size:11px;color:var(--mid);margin-bottom:14px;}
+
+@media(max-width:820px){.layout{grid-template-columns:1fr;}.sidebar{border-right:none;border-bottom:1px solid var(--bdr);}.brand-grid{grid-template-columns:1fr 1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="logo">🔐</div>
+    <div>
+      <div class="htitle">Klíčové <span>centrum</span> · Content Generator</div>
+      <div class="hsub">AI generátor obsahu · 5 kanálů · paměť novinek + historie</div>
+    </div>
+  </div>
+  <div class="hbadge" onclick="switchMain('memory',document.querySelectorAll('.main-tab')[1])">📋 Historie & Novinky</div>
+</div>
+
+<div class="layout">
+
+<!-- ── SIDEBAR ── -->
+<div class="sidebar">
+
+  <div>
+    <div class="slabel">Zdroj tématu</div>
+    <div class="stabs">
+      <button class="stab active" onclick="setMode('manual',this)">✏️ Téma</button>
+      <button class="stab" onclick="setMode('url',this)">🔗 URL</button>
+      <button class="stab" onclick="setMode('brand',this)">📡 Značky</button>
+    </div>
+
+    <!-- MANUAL -->
+    <div id="m-manual">
+      <textarea id="manual-inp" placeholder="Napiš téma nebo popis produktu…&#10;&#10;Např:&#10;• Trezory BURG-WÄCHTER nábytkové, EN 14450&#10;• STAR Smart 2.0 — chytrý zámek&#10;• Systém generálního klíče SGHK&#10;• Bezpečnostní kování RICHTER TB2"></textarea>
+    </div>
+
+    <!-- URL -->
+    <div id="m-url" style="display:none;">
+      <div class="info-box" style="margin-bottom:8px;">Vlož URL produktu nebo článku → AI přečte obsah + vytáhne obrázek.</div>
+      <input type="text" id="url-inp" placeholder="https://klicovecentrum.cz/… nebo jiné">
+      <button class="fetch-btn" id="fetch-url-btn" onclick="fetchViaAI()">🔍 Načíst přes AI</button>
+      <div class="status-line" id="url-status"></div>
+      <div class="preview-box" id="url-preview">
+        <div class="pb-label">Načteno</div>
+        <div class="pb-title" id="prev-title"></div>
+        <img id="prev-img" class="preview-img" style="display:none;" alt="">
+        <div class="pb-body" id="prev-body"></div>
+      </div>
+    </div>
+
+    <!-- BRAND -->
+    <div id="m-brand" style="display:none;">
+      <div id="brand-cats"></div>
+      <button class="fetch-btn" id="fetch-brand-btn" onclick="fetchBrand()">📡 Načíst novinky značky</button>
+      <div class="status-line" id="brand-status"></div>
+      <div class="art-list" id="art-list"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slabel">Kanály</div>
+    <div class="ch-grid" id="ch-grid">
+      <button class="ch-btn sel" data-ch="linkedin" onclick="toggleCh(this)">💼 LinkedIn</button>
+      <button class="ch-btn sel" data-ch="facebook" onclick="toggleCh(this)">📘 Facebook</button>
+      <button class="ch-btn sel" data-ch="instagram" onclick="toggleCh(this)">📸 Instagram</button>
+      <button class="ch-btn sel" data-ch="email" onclick="toggleCh(this)">✉️ E-mail</button>
+      <button class="ch-btn sel" data-ch="blog" onclick="toggleCh(this)">📝 Blog</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="slabel">Persona</div>
+    <select id="persona">
+      <option value="ochrance">B2C · Ochránce rodiny (35–55, rodinný dům)</option>
+      <option value="innovator">B2C · Smart Innovator (tech, STAR Smart)</option>
+      <option value="diy">B2C · DIY Praktik (kutilství)</option>
+      <option value="senior">B2C · Senior Vlastník (60+, pobočka)</option>
+      <option value="urban">B2C · Urban Profesionál (prémiový byt)</option>
+      <option value="fm">B2B · Facility Manager (SGHK)</option>
+      <option value="developer">B2B · Developer / Stavbyvedoucí</option>
+      <option value="sme">B2B · SME Vlastník</option>
+      <option value="zamecnik">B2B · Klasický zámečník</option>
+      <option value="pohotovost">B2B · Zámečník pohotovost</option>
+    </select>
+  </div>
+
+  <button class="gen-btn" id="gen-btn" onclick="generate()">⚡ Generovat obsah</button>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <div class="main-tabs">
+    <button class="main-tab active" onclick="switchMain('generator',this)">⚡ Generátor</button>
+    <button class="main-tab" onclick="switchMain('memory',this)">📋 Novinky & Historie</button>
+  </div>
+
+  <!-- GENERATOR PANEL -->
+  <div class="main-panel active" id="panel-generator">
+    <div id="output">
+      <div class="empty">
+        <div class="empty-ico">🔐</div>
+        <h3>Připraveno</h3>
+        <p>Zvol zdroj tématu vlevo a klikni Generovat.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMORY PANEL -->
+  <div class="main-panel" id="panel-memory">
+
+    <!-- NOVINKY ZNAČEK -->
+    <div class="mem-section">
+      <h3>📡 Novinky značek <span>— aktualizace každých 7 dní · klikni na novinku pro generování</span></h3>
+      <div id="news-container">
+        <div class="mem-empty">Ještě žádné novinky. Načti je tlačítkem níže nebo vyber značku v záložce Značky.</div>
+      </div>
+      <button class="mem-refresh-all" onclick="refreshAllNews()" style="margin-top:8px;">🔄 Aktualizovat všechny novinky</button>
+    </div>
+
+    <!-- HISTORIE -->
+    <div class="mem-section">
+      <h3>📝 Historie zpracovaných témat <span id="hist-count"></span></h3>
+      <div id="history-container">
+        <div class="mem-empty">Zatím žádná zpracovaná témata.</div>
+      </div>
+      <button class="mem-refresh-all" onclick="clearHistory()" style="margin-top:8px;color:var(--red-d);border-color:rgba(193,39,45,.3);">🗑️ Vymazat historii</button>
+    </div>
+
+  </div>
+</div>
+</div><!-- /layout -->
+
+<script>
+// ══════════════════════════════════════════
+// BRANDS — kompletní sortiment KC
+// ══════════════════════════════════════════
+const BRAND_CATS = [
+  {
+    cat: 'Cylindrické vložky',
+    brands: [
+      { id:'fab', name:'FAB / ASSA ABLOY', tag:'CZ mainstream',
+        sources: {
+          produkty:   'https://www.assaabloy.com/group/en/products',
+          aktuality:  'https://www.assaabloy.com/group/en/news',
+          blog:       'https://www.assaabloy.com/group/en/news/blog',
+        },
+        q:'FAB ASSA ABLOY cylindrické vložky zámky nové produkty aktuality blog 2025 2026'
+      },
+      { id:'dormakaba', name:'dormakaba', tag:'CH premium B2B',
+        sources: {
+          produkty:   'https://www.dormakaba.com/us-en/products',
+          aktuality:  'https://www.dormakaba.com/us-en/newsroom',
+          blog:       'https://blog.dormakaba.com/',
+        },
+        q:'dormakaba nové produkty aktuality blog cylindry přístupové systémy 2025 2026'
+      },
+      { id:'iseo', name:'ISEO', tag:'IT rezidenční',
+        sources: {
+          produkty:  'https://www.iseo.com/en/products',
+          aktuality: 'https://www.iseo.com/en/news',
+          blog:      'https://www.iseo.com/en/news',
+        },
+        q:'ISEO cylindrické vložky nové produkty aktuality 2025 2026'
+      },
+      { id:'ces', name:'CES', tag:'DE SGHK 4.třída',
+        sources: {
+          produkty:  'https://www.ces.de/en/products',
+          aktuality: 'https://www.ces.de/en/news',
+          blog:      'https://www.ces.de/en/news',
+        },
+        q:'CES Wittfeld cylindrické vložky SGHK nové produkty novinky 2025 2026'
+      },
+      { id:'cisa', name:'CISA', tag:'IT střední',
+        sources: {
+          produkty:  'https://www.cisa.it/en/products',
+          aktuality: 'https://www.cisa.it/en/news',
+          blog:      'https://www.cisa.it/en/news',
+        },
+        q:'CISA cylindry zámky nové produkty aktuality 2025 2026'
+      },
+      { id:'gege', name:'GE-GE', tag:'AT premium',
+        sources: {
+          produkty:  'https://www.ge-ge.at/produkte',
+          aktuality: 'https://www.ge-ge.at/news',
+          blog:      'https://www.ge-ge.at/news',
+        },
+        q:'GE-GE Gebauer cylindrické vložky nové produkty aktuality 2025 2026'
+      },
+      { id:'evva', name:'EVVA', tag:'AT high-sec',
+        sources: {
+          produkty:  'https://www.evva.com/products',
+          aktuality: 'https://www.evva.com/news',
+          blog:      'https://www.evva.com/news',
+        },
+        q:'EVVA cylindry high security nové produkty novinky blog 2025 2026'
+      },
+      { id:'abloy', name:'ABLOY', tag:'FI diskový',
+        sources: {
+          produkty:  'https://www.abloy.com/products',
+          aktuality: 'https://www.abloy.com/news',
+          blog:      'https://www.abloy.com/news',
+        },
+        q:'ABLOY diskový zámek nové produkty aktuality 2025 2026'
+      },
+      { id:'mul-t-lock', name:'Mul-T-Lock', tag:'IL high-sec',
+        sources: {
+          produkty:  'https://www.mul-t-lock.com/products',
+          aktuality: 'https://www.mul-t-lock.com/news',
+          blog:      'https://www.mul-t-lock.com/news',
+        },
+        q:'Mul-T-Lock cylindry vložky nové produkty aktuality 2025 2026'
+      },
+    ]
+  },
+  {
+    cat: 'Trezory & Sejfy',
+    brands: [
+      { id:'burgwachter', name:'BURG-WÄCHTER', tag:'DE exkl. partner',
+        sources: {
+          produkty:  'https://burg.biz/collections/neuheiten',
+          aktuality: 'https://www.pressebox.de/inaktiv/burg-waechter-kg/',
+          blog:      'https://burg.biz/blogs/news',
+        },
+        q:'BURG-WÄCHTER trezory sejfy nové produkty aktuality pressebox 2025 2026'
+      },
+      { id:'rottner', name:'Rottner', tag:'DE trezory',
+        sources: {
+          produkty:  'https://www.rottner-tresor.de/neuheiten',
+          aktuality: 'https://www.rottner-tresor.de/news',
+          blog:      'https://www.rottner-tresor.de/blog',
+        },
+        q:'Rottner trezory nové produkty aktuality blog 2025 2026'
+      },
+    ]
+  },
+  {
+    cat: 'Dveřní kování',
+    brands: [
+      { id:'richter', name:'RICHTER Czech', tag:'CZ TB2 bezpečnostní',
+        sources: {
+          produkty:  'https://www.richter-czech.cz/produkty',
+          aktuality: 'https://www.richter-czech.cz/novinky',
+          blog:      'https://www.richter-czech.cz/novinky',
+        },
+        q:'Richter Czech bezpečnostní kování nové produkty aktuality novinky 2025 2026'
+      },
+      { id:'rostex', name:'ROSTEX', tag:'CZ kování',
+        sources: {
+          produkty:  'https://www.rostex.cz/produkty',
+          aktuality: 'https://www.rostex.cz/aktuality',
+          blog:      'https://www.rostex.cz/aktuality',
+        },
+        q:'Rostex dveřní kování nové produkty aktuality 2025 2026'
+      },
+      { id:'hobes', name:'Hobes', tag:'CZ kliky',
+        sources: {
+          produkty:  'https://www.hobes.cz/produkty',
+          aktuality: 'https://www.hobes.cz/aktuality',
+          blog:      'https://www.hobes.cz/aktuality',
+        },
+        q:'Hobes dveřní kování kliky nové produkty aktuality 2025 2026'
+      },
+    ]
+  },
+  {
+    cat: 'Visací zámky & závory',
+    brands: [
+      { id:'yale', name:'YALE / ASSA ABLOY', tag:'Smart+visací',
+        sources: {
+          produkty:  'https://www.yale.com/en/yale/products',
+          aktuality: 'https://www.yale.com/en/yale/news',
+          blog:      'https://www.yale.com/en/yale/news',
+        },
+        q:'Yale visací zámky smart lock nové produkty aktuality 2025 2026'
+      },
+      { id:'abus', name:'ABUS', tag:'DE bezpečnost',
+        sources: {
+          produkty:  'https://www.abus.com/eng/News-and-Publications/News',
+          aktuality: 'https://www.abus.com/eng/News-and-Publications/News',
+          blog:      'https://www.abus.com/eng/News-and-Publications/News',
+        },
+        q:'ABUS visací zámky bezpečnostní nové produkty aktuality 2025 2026'
+      },
+    ]
+  },
+  {
+    cat: 'Elektronické systémy',
+    brands: [
+      { id:'starsmart', name:'STAR Smart', tag:'vlastní brand EPS',
+        sources: {
+          produkty:  'https://star.hbgroup.cz/produkty',
+          aktuality: 'https://star.hbgroup.cz/aktuality',
+          blog:      'https://star.hbgroup.cz',
+        },
+        q:'STAR Smart chytrý zámek elektronická vložka H&B Group nové produkty aktuality 2025 2026'
+      },
+      { id:'nuki', name:'Nuki', tag:'AT smart lock',
+        sources: {
+          produkty:  'https://nuki.io/en/products/',
+          aktuality: 'https://nuki.io/en/blog/',
+          blog:      'https://nuki.io/en/blog/',
+        },
+        q:'Nuki smart lock nové produkty aktuality blog 2025 2026'
+      },
+      { id:'winkhaus', name:'Winkhaus', tag:'DE mechatronika',
+        sources: {
+          produkty:  'https://www.winkhaus.com/en/products',
+          aktuality: 'https://www.winkhaus.com/en/news',
+          blog:      'https://www.winkhaus.com/en/news',
+        },
+        q:'Winkhaus elektronické zámky mechatronika nové produkty aktuality 2025 2026'
+      },
+    ]
+  },
+  {
+    cat: 'Stroje & Polotovary',
+    brands: [
+      { id:'silca', name:'Silca', tag:'IT stroje/klíče',
+        sources: {
+          produkty:  'https://www.silca.biz/products',
+          aktuality: 'https://www.silca.biz/news',
+          blog:      'https://www.silca.biz/blog',
+        },
+        q:'Silca stroje na klíče autoklíče nové produkty aktuality blog 2025 2026'
+      },
+      { id:'keyline', name:'Keyline', tag:'IT autoklíče',
+        sources: {
+          produkty:  'https://www.keyline.it/en/products',
+          aktuality: 'https://www.keyline.it/en/news',
+          blog:      'https://www.keyline.it/en/news',
+        },
+        q:'Keyline autoklíče transponder nové produkty aktuality 2025 2026'
+      },
+    ]
+  },
+  {
+    cat: 'Normy & Oborové zdroje',
+    brands: [
+      { id:'cmzs', name:'ČMZS', tag:'normy CZ',
+        sources: {
+          produkty:  'https://cmzs.cz/cs/katalog-vyrobku',
+          aktuality: 'https://cmzs.cz/cs/aktuality',
+          blog:      'https://cmzs.cz/cs/zpravodaj',
+        },
+        q:'ČMZS cech mechanických zámkových systémů aktuality zpravodaj certifikace 2025 2026 site:cmzs.cz'
+      },
+      { id:'secmag', name:'Security magazín CZ', tag:'oborové zprávy',
+        sources: {
+          produkty:  'https://www.securitymagazin.cz/produkty',
+          aktuality: 'https://www.securitymagazin.cz/',
+          blog:      'https://www.securitymagazin.cz/',
+        },
+        q:'security magazin CZ bezpečnostní zprávy zámky trezory aktuality 2025 2026 site:securitymagazin.cz'
+      },
+      { id:'isc', name:'ISC / Veletrhy', tag:'bezpečnostní veletrhy',
+        sources: {
+          produkty:  'https://www.iscsecurityexpo.com/',
+          aktuality: 'https://www.iscsecurityexpo.com/news/',
+          blog:      'https://www.iscsecurityexpo.com/news/',
+        },
+        q:'ISC West securitex bezpečnostní veletrh zámky přístupové systémy novinky 2025 2026'
+      },
+    ]
+  },
+];
+
+const PERSONAS = {
+  ochrance:'B2C Ochránce rodiny (35–55 let, rodinný dům, motivace: bezpečí rodiny, konzervativní, ROPO, CTA: pobočka, pojišťovny jako argument)',
+  innovator:'B2C Smart Innovator (28–40 let, tech nadšenec, Smart Home, STAR Smart, impulzivní, CTA: online demo)',
+  diy:'B2C DIY Praktik (35–55, kutilství, návody, kvalita za rozumnou cenu, CTA: stáhnout návod / pobočka)',
+  senior:'B2C Senior Vlastník (60+, osobní kontakt, tradice, pobočka a telefon, CTA: zavolejte / navštivte)',
+  urban:'B2C Urban Profesionál (28–40, prémiový byt, white glove, design, CTA: naplánovat instalaci)',
+  fm:'B2B Facility Manager (SGHK, centrální správa, ROI, 50k–500k Kč/měs, CTA: bezplatný audit)',
+  developer:'B2B Developer/Stavbyvedoucí (reference, certifikace EN, deadline, CTA: poptat nabídku)',
+  sme:'B2B SME Vlastník (jednoduchost, rychlost, CTA: rychlá nabídka / pobočka)',
+  zamecnik:'B2B Klasický zámečník (stock-up 1–2×/měs, osobní vztah, CTA: B2B pobočka)',
+  pohotovost:'B2B Zámečník pohotovost (dostupnost TEĎ > cena, večerní pobočka)',
+};
+const CH_LABELS={linkedin:{icon:'💼',label:'LinkedIn'},facebook:{icon:'📘',label:'Facebook'},instagram:{icon:'📸',label:'Instagram'},email:{icon:'✉️',label:'E-mail'},blog:{icon:'📝',label:'Blog'}};
+
+// ══ STATE ══
+let mode='manual';
+let selChannels=new Set(['linkedin','facebook','instagram','email','blog']);
+let fetchedTitle='',fetchedContent='',fetchedImageUrl='';
+let selBrand=null;
+
+// ══ STORAGE KEYS ══
+const SK_NEWS    = 'kc:news:';      // kc:news:{brandId} → {items, ts}
+const SK_HISTORY = 'kc:history';    // array of {id,title,channels,persona,ts}
+const NEWS_TTL   = 7*24*60*60*1000; // 7 dní
+
+// ══════════════ INIT ══════════════
+function initBrands(){
+  const cats=document.getElementById('brand-cats');
+  BRAND_CATS.forEach(c=>{
+    const sec=document.createElement('div');
+    sec.className='brand-cat';
+    sec.innerHTML=`<div class="brand-cat-label">${c.cat}</div><div class="brand-grid" id="bg-${c.cat.replace(/\W/g,'')}"></div>`;
+    cats.appendChild(sec);
+    const grid=sec.querySelector('.brand-grid');
+    c.brands.forEach(b=>{
+      const el=document.createElement('div');
+      el.className='brand-tile';
+      el.innerHTML=`<span class="brand-name">${b.name}</span><span class="brand-tag">${b.tag}</span>`;
+      el.onclick=()=>{
+        document.querySelectorAll('.brand-tile').forEach(x=>x.classList.remove('sel'));
+        el.classList.add('sel'); selBrand=b;
+        document.getElementById('brand-status').textContent=`Zdroj: ${b.name}`;
+        document.getElementById('art-list').innerHTML='';
+      };
+      grid.appendChild(el);
+    });
+  });
+}
+initBrands();
+
+// ══════════════ MAIN TABS ══════════════
+function switchMain(panel,btn){
+  document.querySelectorAll('.main-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+panel).classList.add('active');
+  btn.classList.add('active');
+  if(panel==='memory') renderMemory();
+}
+
+// ══════════════ MODE ══════════════
+function setMode(m,btn){
+  mode=m;
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('m-manual').style.display=m==='manual'?'':'none';
+  document.getElementById('m-url').style.display   =m==='url'?'':'none';
+  document.getElementById('m-brand').style.display =m==='brand'?'':'none';
+}
+
+function toggleCh(btn){
+  const ch=btn.dataset.ch;
+  if(selChannels.has(ch)){if(selChannels.size===1)return;selChannels.delete(ch);btn.classList.remove('sel');}
+  else{selChannels.add(ch);btn.classList.add('sel');}
+}
+
+// ══════════════ CLAUDE API ══════════════
+async function claudeCall(prompt,maxTokens=1200){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
+  const d=await r.json();
+  return d.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n')||'';
+}
+
+// ══════════════ FETCH URL ══════════════
+async function fetchViaAI(){
+  const url=document.getElementById('url-inp').value.trim();
+  if(!url){alert('Zadej URL.');return;}
+  const btn=document.getElementById('fetch-url-btn');
+  const status=document.getElementById('url-status');
+  btn.disabled=true;btn.textContent='⏳ Načítám…';
+  status.textContent='Načítám…';
+  fetchedTitle='';fetchedContent='';fetchedImageUrl='';
+  try{
+    const today = new Date().toISOString().slice(0,10);
+    const text=await claudeCall(`Dnešní datum je ${today}. Přečti tuto stránku pomocí web search a extrahuj aktuální informace: ${url}\n\nPoužij web_search nástroj — nehledej ve své paměti.\nFormát:\nNÁZEV: [název]\nPOPIS: [3-6 vět]\nCENA: [nebo "není"]\nCERTIFIKACE: [nebo "není"]\nOBRÁZEK: [přímá https:// URL obrázku nebo "žádný"]\nKLÍČOVÉ BODY: [3-5 bodů oddělených |]`);
+    const g=(k)=>{const m=text.match(new RegExp(k+':\\s*(.+)','i'));return m?m[1].trim():'';};
+    fetchedTitle=g('NÁZEV')||url;
+    fetchedContent=`Název: ${g('NÁZEV')}\nPopis: ${g('POPIS')}\nCena: ${g('CENA')}\nCertifikace: ${g('CERTIFIKACE')}\nKlíčové body: ${g('KLÍČOVÉ BODY')}`;
+    fetchedImageUrl=g('OBRÁZEK');
+    status.textContent=`✅ ${fetchedTitle}`;
+    document.getElementById('prev-title').textContent=fetchedTitle;
+    document.getElementById('prev-body').textContent=g('POPIS');
+    const img=document.getElementById('prev-img');
+    if(fetchedImageUrl.startsWith('http')){img.src=fetchedImageUrl;img.style.display='block';}else img.style.display='none';
+    document.getElementById('url-preview').style.display='';
+  }catch(e){status.textContent='❌ Nepodařilo se načíst.';}
+  btn.disabled=false;btn.innerHTML='🔍 Načíst přes AI';
+}
+
+// ══════════════ FETCH BRAND (+ cache) ══════════════
+async function fetchBrand(brand, silent=false){
+  const b = brand || selBrand;
+  if(!b){alert('Vyber značku.');return;}
+  const stKey = SK_NEWS + b.id;
+
+  // check cache
+  try{
+    const cached = await window.storage.get(stKey);
+    if(cached){
+      const parsed = JSON.parse(cached.value);
+      const age = Date.now() - parsed.ts;
+      if(age < NEWS_TTL){
+        if(!silent) showArtList(parsed.items, b, true);
+        return parsed.items;
+      }
+    }
+  }catch(e){}
+
+  // fetch fresh
+  if(!silent){
+    const btn=document.getElementById('fetch-brand-btn');
+    const status=document.getElementById('brand-status');
+    btn.disabled=true;btn.textContent='⏳ Hledám novinky…';
+    status.textContent=`Hledám novinky od ${b.name}…`;
+    document.getElementById('art-list').innerHTML='';
+  }
+
+  try{
+    const today = new Date().toISOString().slice(0,10);
+    const sixMonthsAgo = new Date(Date.now() - 182*24*60*60*1000).toISOString().slice(0,7);
+    const src = b.sources || {};
+
+    const text = await claudeCall(
+`Dnešní datum je ${today}. Hledáme obsah od ${sixMonthsAgo} do dnes (posledních 6 měsíců).
+
+Proveď 3 oddělená web_search hledání pro značku ${b.name}:
+
+1. PRODUKTY — hledej na ${src.produkty||'webu výrobce'}: nové nebo aktualizované produkty od ${sixMonthsAgo}
+   Dotaz: ${b.q} new products site OR produkty novinka
+
+2. AKTUALITY — hledej na ${src.aktuality||'webu výrobce'}: press release, zprávy, oznámení od ${sixMonthsAgo}
+   Dotaz: ${b.q} news aktuality press release ${today.slice(0,4)}
+
+3. BLOG / ČLÁNKY — hledej na ${src.blog||'webu výrobce'}: odborné články, průvodce, tipy od ${sixMonthsAgo}
+   Dotaz: ${b.q} blog article guide tip ${today.slice(0,4)}
+
+DŮLEŽITÉ: Použij web_search nástroj. Vyřaď vše starší než ${sixMonthsAgo}. Uváděj datum pokud je dostupné.
+
+Výstup — pouze tyto řádky:
+PRODUKT: [název] | [1 věta popis] | [URL] | [URL obrázku nebo prázdné] | [datum YYYY-MM]
+AKTUALITA: [název] | [1 věta popis] | [URL] | [URL obrázku nebo prázdné] | [datum YYYY-MM]
+BLOG: [název] | [1 věta popis] | [URL] | [URL obrázku nebo prázdné] | [datum YYYY-MM]
+
+Max 4 výsledky každého typu. Jen řádky začínající PRODUKT:, AKTUALITA: nebo BLOG:.`, 2000);
+    const lines=text.split('\n').filter(l=>l.trim().startsWith('NOVINKA:'));
+    // parse all 3 types
+    const allLines = text.split('\n').filter(l => /^(PRODUKT|AKTUALITA|BLOG):/.test(l.trim()));
+    const typeMap = { 'PRODUKT':'🛍️ Produkt', 'AKTUALITA':'📰 Aktualita', 'BLOG':'✍️ Blog' };
+    const items = allLines.map(l => {
+      const typeKey = l.match(/^(PRODUKT|AKTUALITA|BLOG):/)[1];
+      const p = l.replace(/^(PRODUKT|AKTUALITA|BLOG):/,'').trim().split('|');
+      return {
+        type: typeKey,
+        typeLabel: typeMap[typeKey],
+        title: (p[0]||'').trim(),
+        desc:  (p[1]||'').trim(),
+        url:   (p[2]||'').trim(),
+        img:   (p[3]||'').trim(),
+        date:  (p[4]||'').trim(),
+      };
+    }).filter(i => i.title);
+
+    // save to storage
+    try{ await window.storage.set(stKey, JSON.stringify({items, ts:Date.now(), brand:b.name})); }catch(e){}
+
+    if(!silent) showArtList(items, b, false);
+    return items;
+  }catch(e){
+    if(!silent) document.getElementById('brand-status').textContent='❌ Chyba při načítání.';
+  }finally{
+    if(!silent){
+      const btn=document.getElementById('fetch-brand-btn');
+      btn.disabled=false;btn.innerHTML='📡 Načíst novinky značky';
+    }
+  }
+  return [];
+}
+
+function showArtList(items, b, fromCache){
+  const status = document.getElementById('brand-status');
+  const artList = document.getElementById('art-list');
+  const counts = {PRODUKT:0,AKTUALITA:0,BLOG:0};
+  items.forEach(i=>{ if(counts[i.type]!==undefined) counts[i.type]++; });
+  const summary = [
+    counts.PRODUKT   ? `🛍️ ${counts.PRODUKT}` : '',
+    counts.AKTUALITA ? `📰 ${counts.AKTUALITA}` : '',
+    counts.BLOG      ? `✍️ ${counts.BLOG}` : '',
+  ].filter(Boolean).join('  ');
+
+  if(!items.length){
+    status.textContent = `⚠️ ${b.name} — žádné výsledky. Zkus obnovit nebo zadej téma ručně.`;
+    artList.innerHTML = '';
+    return;
+  }
+
+  status.textContent = `${fromCache?'📦 Cache:':'✅'} ${b.name} — ${summary} položek`;
+  artList.innerHTML = '';
+
+  const typeOrder = ['PRODUKT','AKTUALITA','BLOG'];
+  const typeHeaders = {PRODUKT:'🛍️ Produkty', AKTUALITA:'📰 Aktuality', BLOG:'✍️ Blog & Články'};
+
+  typeOrder.forEach(type => {
+    const group = items.filter(i=>i.type===type);
+    if(!group.length) return;
+
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#999;padding:8px 0 4px;border-top:1px solid var(--bdr);margin-top:4px;';
+    hdr.textContent = typeHeaders[type];
+    artList.appendChild(hdr);
+
+    group.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'art-item';
+      const hasImg = item.img && item.img.startsWith('http');
+      el.innerHTML = `
+        ${hasImg ? `<img src="${item.img}" class="art-item-img" alt="" onerror="this.style.display='none'">` : ''}
+        <div class="art-item-txt">
+          <div class="art-item-title">${item.title.slice(0,80)}</div>
+          <div class="art-item-meta">
+            ${item.date ? '📅 '+item.date+' · ' : ''}${item.desc ? item.desc.slice(0,60)+(item.desc.length>60?'…':'') : ''}
+            ${fromCache ? '<br><span class="art-cached">📦 paměť</span>' : ''}
+          </div>
+        </div>
+        <div class="art-item-fetch" style="flex-shrink:0;font-size:18px;cursor:pointer;padding:0 4px;opacity:0.4;" title="Načíst plný článek + obrázek">📄</div>`;
+
+      // click on item — select + optionally deep-fetch
+      el.onclick = async (e) => {
+        document.querySelectorAll('.art-item').forEach(x=>x.classList.remove('sel-art'));
+        el.classList.add('sel-art');
+        fetchedTitle    = item.title;
+        fetchedContent  = `Značka: ${b.name}\nTyp: ${item.typeLabel}\nNázev: ${item.title}\nPopis: ${item.desc}${item.date?'\nDatum: '+item.date:''}${item.url?'\nZdroj: '+item.url:''}`;
+        fetchedImageUrl = item.img || '';
+
+        // Deep fetch — load full article content + image from URL
+        if(item.url && item.url.startsWith('http')){
+          const fetchBtn = el.querySelector('.art-item-fetch');
+          fetchBtn.textContent = '⏳';
+          try{
+            const today = new Date().toISOString().slice(0,10);
+            const fullText = await claudeCall(
+`Dnešní datum: ${today}. Přečti tento článek/stránku pomocí web_search nebo web_fetch: ${item.url}
+
+Extrahuj:
+NÁZEV: [plný název]
+PEREX: [první 2-3 věty nebo úvod článku]
+OBSAH: [hlavní body článku, max 8 vět]
+OBRÁZEK: [URL hlavního obrázku — hledej og:image meta tag nebo první velký obrázek, jen https:// URL]
+DATUM: [datum publikace YYYY-MM-DD]
+
+Odpověz POUZE v tomto formátu, nic jiného.`, 800);
+
+            const g = (k) => { const m = fullText.match(new RegExp(k+':\\s*([^\\n]+)')); return m ? m[1].trim() : ''; };
+            const title   = g('NÁZEV') || item.title;
+            const perex   = g('PEREX');
+            const content = g('OBSAH');
+            const imgUrl  = g('OBRÁZEK');
+            const date    = g('DATUM');
+
+            fetchedTitle   = title;
+            fetchedContent = `Značka: ${b.name}\nTyp: ${item.typeLabel}\nNázev: ${title}\n${perex?'Perex: '+perex+'\n':''}${content?'Obsah: '+content+'\n':''}${date?'Datum: '+date+'\n':''}${item.url?'Zdroj: '+item.url:''}`;
+            if(imgUrl && imgUrl.startsWith('http')) fetchedImageUrl = imgUrl;
+
+            // update img in list
+            if(imgUrl && imgUrl.startsWith('http') && !hasImg){
+              let imgEl = el.querySelector('.art-item-img');
+              if(!imgEl){
+                imgEl = document.createElement('img');
+                imgEl.className = 'art-item-img';
+                imgEl.onerror = () => imgEl.style.display='none';
+                el.insertBefore(imgEl, el.querySelector('.art-item-txt'));
+              }
+              imgEl.src = imgUrl;
+              imgEl.style.display = '';
+            }
+
+            // update preview in sidebar URL section
+            document.getElementById('prev-title').textContent = title;
+            document.getElementById('prev-body').textContent  = perex || content || '';
+            const prevImg = document.getElementById('prev-img');
+            if(fetchedImageUrl.startsWith('http')){ prevImg.src=fetchedImageUrl; prevImg.style.display='block'; }
+            document.getElementById('url-preview').style.display = '';
+
+            fetchBtn.textContent = '✅';
+            setTimeout(()=>fetchBtn.textContent='📄', 2000);
+
+          }catch(err){
+            fetchBtn.textContent = '❌';
+            setTimeout(()=>fetchBtn.textContent='📄', 2000);
+          }
+        }
+      };
+      artList.appendChild(el);
+    });
+  });
+}
+
+// ══════════════ HISTORY ══════════════
+async function saveToHistory(title, channels, persona){
+  let hist=[];
+  try{ const r=await window.storage.get(SK_HISTORY); if(r) hist=JSON.parse(r.value); }catch(e){}
+  // deduplicate by title
+  hist=hist.filter(h=>h.title!==title);
+  hist.unshift({id:Date.now(),title,channels:Array.from(channels),persona,ts:Date.now()});
+  if(hist.length>50) hist=hist.slice(0,50);
+  try{ await window.storage.set(SK_HISTORY,JSON.stringify(hist)); }catch(e){}
+}
+
+async function getHistory(){
+  try{ const r=await window.storage.get(SK_HISTORY); return r?JSON.parse(r.value):[]; }catch(e){return [];}
+}
+
+async function clearHistory(){
+  if(!confirm('Vymazat celou historii témat?')) return;
+  try{ await window.storage.delete(SK_HISTORY); }catch(e){}
+  renderMemory();
+}
+
+async function deleteHistoryItem(id){
+  let hist=await getHistory();
+  hist=hist.filter(h=>h.id!==id);
+  try{ await window.storage.set(SK_HISTORY,JSON.stringify(hist)); }catch(e){}
+  renderMemory();
+}
+
+// ══════════════ RENDER MEMORY ══════════════
+async function renderMemory(){
+  // --- NEWS ---
+  const newsContainer=document.getElementById('news-container');
+  newsContainer.innerHTML='<div class="mem-empty">Načítám uložené novinky…</div>';
+  let newsHtml='';
+  let hasNews=false;
+
+  for(const cat of BRAND_CATS){
+    for(const b of cat.brands){
+      try{
+        const r=await window.storage.get(SK_NEWS+b.id);
+        if(r){
+          const parsed=JSON.parse(r.value);
+          const age=Date.now()-parsed.ts;
+          const ageH=Math.round(age/3600000);
+          const ageStr=ageH<24?`před ${ageH}h`:`před ${Math.round(ageH/24)}d`;
+          const expired=age>NEWS_TTL;
+          hasNews=true;
+          newsHtml+=`<div class="news-card">
+            <div class="news-card-head">
+              <span class="news-card-brand">${b.name}</span>
+              <span class="news-card-date">${ageStr}${expired?' · ⚠️ zastaralé':''}</span>
+              <button class="news-card-refresh" onclick="refreshBrandNews('${b.id}')">🔄 Obnovit</button>
+            </div>
+            <div class="news-card-body">`;
+          parsed.items.forEach(item=>{
+            newsHtml+=`<div class="news-item" onclick="useNewsItem(${JSON.stringify(item).replace(/"/g,'&quot;')}, '${b.name}')">
+              ${item.img&&item.img.startsWith('http')?`<img src="${item.img}" class="news-item-img" alt="" onerror="this.style.display='none'">` :''}
+              <div class="news-item-txt">
+                <div class="ni-title">${item.typeLabel ? item.typeLabel+' · ':''} ${item.title.slice(0,70)}</div>
+                <div class="ni-meta">${item.date?'📅 '+item.date+' · ':''}${item.desc?item.desc.slice(0,60)+'…':''}</div>
+              </div>
+            </div>`;
+          });
+          newsHtml+=`</div></div>`;
+        }
+      }catch(e){}
+    }
+  }
+  newsContainer.innerHTML=hasNews?newsHtml:'<div class="mem-empty">Žádné uložené novinky. Načti je přes záložku 📡 Značky nebo klikni Aktualizovat.</div>';
+
+  // --- HISTORY ---
+  const hist=await getHistory();
+  const histContainer=document.getElementById('history-container');
+  document.getElementById('hist-count').textContent=`(${hist.length})`;
+  if(!hist.length){ histContainer.innerHTML='<div class="mem-empty">Zatím žádná zpracovaná témata.</div>'; return; }
+  histContainer.innerHTML=hist.map(h=>{
+    const date=new Date(h.ts).toLocaleDateString('cs-CZ');
+    const time=new Date(h.ts).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="history-item">
+      <div class="hi-title">${h.title.slice(0,70)}</div>
+      <div class="hi-channels">${h.channels.map(c=>`<span class="hi-ch">${CH_LABELS[c]?.icon||''}</span>`).join('')}</div>
+      <div class="hi-meta">${date} ${time}</div>
+      <button class="hi-del" onclick="deleteHistoryItem(${h.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function useNewsItem(item, brandName){
+  fetchedTitle=item.title;
+  fetchedContent=`Značka: ${brandName}\nNázev: ${item.title}\nPopis: ${item.desc}`;
+  fetchedImageUrl=item.img||'';
+  switchMain('generator',document.querySelector('.main-tab'));
+  setMode('brand',document.querySelectorAll('.stab')[2]);
+  document.getElementById('brand-status').textContent=`Téma ze zásoby: ${item.title}`;
+}
+
+async function refreshBrandNews(brandId){
+  const b=BRAND_CATS.flatMap(c=>c.brands).find(b=>b.id===brandId);
+  if(!b) return;
+  try{ await window.storage.delete(SK_NEWS+b.id); }catch(e){}
+  await fetchBrand(b, true);
+  renderMemory();
+}
+
+async function refreshAllNews(){
+  const btn=document.querySelector('.mem-refresh-all');
+  btn.disabled=true; btn.textContent='⏳ Aktualizuji…';
+  // refresh only brands that have cached data or are expired
+  for(const cat of BRAND_CATS){
+    for(const b of cat.brands){
+      try{
+        const r=await window.storage.get(SK_NEWS+b.id);
+        if(r){
+          const parsed=JSON.parse(r.value);
+          if(Date.now()-parsed.ts > NEWS_TTL){
+            await window.storage.delete(SK_NEWS+b.id);
+            await fetchBrand(b,true);
+          }
+        }
+      }catch(e){}
+    }
+  }
+  btn.disabled=false; btn.textContent='🔄 Aktualizovat všechny novinky';
+  renderMemory();
+}
+
+// ══════════════ GENERATE ══════════════
+function buildPrompt(topic,channels){
+  const persona=PERSONAS[document.getElementById('persona').value]||PERSONAS.ochrance;
+  const chInstr={
+    linkedin:`=== LINKEDIN ===\nCarousel 8 snímků 1080×1080.\nKaždý snímek: SNÍMEK [č]: TAG: [2 slova CAPS] | NADPIS: [max 10 slov] | TEXT: [max 25 slov]\nSnímek 1 = hook, 8 = CTA pobočka/zavolejte.\nPOPISEK: [3–4 věty] HASHTAGY: [6–8]\n---`,
+    facebook:`=== FACEBOOK ===\nPOST 1 obrázkový 1200×628: BANNER: [max 8 slov] | TEXT: [5–7 vět + CTA + 4 hashtagy]\nPOST 2 vzdělávací text: [6–8 vět, otázka/test, CTA]\nPOST 3 situační: [trigger + 5–6 vět + CTA]\n---`,
+    instagram:`=== INSTAGRAM ===\nA) 6 TILES: TILE [č]: HLAVNÍ: [max 4 slova CAPS] | POD: [max 7 slov] | BG: [dark/red/light]\nB) CAPTION 1: [4–5 vět] HASHTAGY: [15–18]\nC) CAPTION 2: [4–5 vět] HASHTAGY: [10]\nD) REELS: SCÉNA:[...] OVERLAY:[...] CTA:[...]\n---`,
+    email:`=== EMAIL ===\nA) NEWSLETTER: PŘEDMĚT:[max 50z] PREHEADER:[max 85z] TEXT:[6–8 odstavců, vykáme]\n---\nB) DEN 1: PŘEDMĚT:[...] TEXT:[4–5 odst.]\n---\nC) DEN 3: PŘEDMĚT:[...] TEXT:[4–5 odst.]\n---\nD) DEN 5: PŘEDMĚT:[...] TEXT:[3–4 odst.+CTA]\n---`,
+    blog:`=== BLOG ===\nA) SEO: TITLE:[max 60z] META:[max 155z] SLUG:[/blog/...]\nB) KLÍČOVÁ SLOVA:[4–5 frází|]\nC) H1:[...] PEREX:[3 věty] + 4–5 H2 sekcí s popisem\nD) LINKY:[4 interní]\nE) CTA BLOK:[...]\n---`,
+  };
+  return `Jsi expert na content marketing pro Klíčové centrum (klicovecentrum.cz) — 17+ poboček CZ+SK, specialista na bezpečnostní vložky, zámky, trezory BURG-WÄCHTER, autoklíče, STAR Smart. 30 let v oboru.
+TÉMA: ${topic}
+PERSONA: ${persona}
+TÓN: Formální (vykáme), odborný+srozumitelný, vřelý. Bezpečnost = jistota. Certifikace jako argument. CTA: pobočka/zavolejte/zjistit více.
+Piš česky. Copy ready-to-use. Žádné placeholdery.
+${channels.map(ch=>chInstr[ch]).join('\n\n')}`;
+}
+
+function parseOut(text,channels){
+  const result={};
+  const markers={linkedin:/===\s*LINKEDIN\s*===([\s\S]*?)(?====\s*\w|$)/i,facebook:/===\s*FACEBOOK\s*===([\s\S]*?)(?====\s*\w|$)/i,instagram:/===\s*INSTAGRAM\s*===([\s\S]*?)(?====\s*\w|$)/i,email:/===\s*E-?MAIL\s*===([\s\S]*?)(?====\s*\w|$)/i,blog:/===\s*BLOG\s*===([\s\S]*?)(?====\s*\w|$)/i};
+  channels.forEach(ch=>{const m=text.match(markers[ch]);result[ch]=m?m[1].trim():text;});
+  return result;
+}
+
+function fmt(text){
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^#{1,3}\s+(.+)$/gm,'<h4>$1</h4>')
+    .replace(/^[-•]\s+(.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>[^<]*<\/li>\n?)+/g,m=>`<ul>${m}</ul>`)
+    .replace(/(#[\wáčďéěíňóřšťůúýžÁČĎÉĚÍŇÓŘŠŤŮÚÝŽ]+)/g,'<span class="ht">$1</span>')
+    .replace(/\n\n+/g,'</p><p>').replace(/\n/g,'<br>')
+    .replace(/^(?!<[hup])(.+)$/gm,'<p>$1</p>')
+    .replace(/<p><\/p>/g,'')
+    .replace(/<p>(<[hup])/g,'$1').replace(/(<\/[hul][l4]?>)<\/p>/g,'$1');
+}
+
+function renderOut(parsed,channels){
+  let html=`<div class="src-bar">
+    <span class="sb-ico">🔐</span>
+    ${fetchedImageUrl&&fetchedImageUrl.startsWith('http')?`<img src="${fetchedImageUrl}" class="src-img" alt="" onerror="this.style.display='none'">`:''}
+    <div class="sb-info"><div class="sb-topic">${fetchedTitle||'Vygenerovaný obsah'}</div>
+    <div class="sb-meta">${channels.map(c=>CH_LABELS[c].label).join(' · ')}</div></div>
+  </div><div class="out-tabs">`;
+  channels.forEach((ch,i)=>{ html+=`<button class="out-tab ${i===0?'active':''}" onclick="switchOut('${ch}',this)">${CH_LABELS[ch].icon} ${CH_LABELS[ch].label}</button>`; });
+  html+=`</div>`;
+  channels.forEach((ch,i)=>{
+    const content=parsed[ch]||'';
+    const blocks=content.split(/^---+$/m).filter(b=>b.trim());
+    html+=`<div class="ch-out ${i===0?'active':''}" id="out-${ch}"><div class="out-h"><h2>${CH_LABELS[ch].icon} ${CH_LABELS[ch].label}</h2><p>${fetchedTitle||'zadané téma'}</p></div>`;
+    if(fetchedImageUrl&&fetchedImageUrl.startsWith('http')&&i===0) html+=`<img src="${fetchedImageUrl}" class="out-img" alt="${fetchedTitle}" onerror="this.style.display='none'"><div class="img-cap">📸 Obrázek produktu — použij jako vizuál</div>`;
+    if(blocks.length>1){
+      blocks.forEach((blk,bi)=>{
+        const lines=blk.trim().split('\n').filter(l=>l.trim());
+        const head=(lines[0]||'').replace(/^[=#*\s]+/,'').trim().slice(0,60);
+        const rest=lines.slice(1).join('\n');
+        html+=`<div class="cblock"><div class="cb-head"><span class="cb-lbl">Blok ${bi+1}</span><span class="cb-ttl">${head||CH_LABELS[ch].label}</span><button class="copy-btn" onclick="copyT(this,${JSON.stringify((lines[0]+'\n'+rest).trim())})">Kopírovat</button></div><div class="cb-body">${fmt(rest||blk.trim())}</div></div>`;
+      });
+    } else {
+      html+=`<div class="cblock"><div class="cb-head"><span class="cb-lbl">Obsah</span><span class="cb-ttl">${CH_LABELS[ch].label}</span><button class="copy-btn" onclick="copyT(this,${JSON.stringify(content)})">Kopírovat vše</button></div><div class="cb-body">${fmt(content)}</div></div>`;
+    }
+    html+=`</div>`;
+  });
+  document.getElementById('output').innerHTML=html;
+}
+
+function switchOut(ch,btn){
+  document.querySelectorAll('.ch-out').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.out-tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('out-'+ch).classList.add('active'); btn.classList.add('active');
+}
+
+async function copyT(btn,text){
+  await navigator.clipboard.writeText(text);
+  const o=btn.textContent; btn.textContent='✅ OK'; setTimeout(()=>btn.textContent=o,1600);
+}
+
+async function generate(){
+  let topic='';
+  if(mode==='manual'){
+    topic=document.getElementById('manual-inp').value.trim();
+    if(!topic){alert('Zadej téma.');return;}
+    fetchedTitle=topic.slice(0,60); fetchedImageUrl='';
+  } else if(mode==='url'){
+    if(!fetchedContent){alert('Načti URL nejdřív.');return;}
+    topic=fetchedContent;
+  } else {
+    if(!fetchedContent){alert('Vyber novinku ze seznamu.');return;}
+    topic=fetchedContent;
+  }
+  const channels=Array.from(selChannels);
+  if(!channels.length){alert('Vyber kanál.');return;}
+
+  const btn=document.getElementById('gen-btn');
+  btn.disabled=true; btn.innerHTML='⏳ Generuji…';
+  document.getElementById('output').innerHTML=`<div class="loading"><div class="spin"></div><div class="load-t">Generuji obsah pro ${channels.length} kanálů…</div></div>`;
+
+  try{
+    const text=await claudeCall(buildPrompt(topic,channels),5000);
+    if(!text) throw new Error('Prázdná odpověď');
+    const parsed=parseOut(text,channels);
+    renderOut(parsed,channels);
+    await saveToHistory(fetchedTitle,selChannels,document.getElementById('persona').value);
+  }catch(e){
+    document.getElementById('output').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><h3>Chyba</h3><p>${e.message}</p></div>`;
+  }
+  btn.disabled=false; btn.innerHTML='⚡ Generovat obsah';
+}
+</script>
+</body>
+</html>
