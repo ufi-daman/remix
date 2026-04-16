@@ -622,7 +622,7 @@ function toggleCh(btn){
 
 // ══════════════ CLAUDE API ══════════════
 async function claudeCall(prompt,maxTokens=1200){
-  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
+  const r=await fetch('https://frosty-art-fc70.oskrebsky.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
   const d=await r.json();
   return d.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n')||'';
 }
