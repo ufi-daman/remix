@@ -398,11 +398,11 @@ const BRAND_CATS = [
     brands: [
       { id:'burgwachter', name:'BURG-WÄCHTER', tag:'DE exkl. partner',
         sources: {
-          produkty:  'https://burg.biz/collections/neuheiten',
-          aktuality: 'https://www.pressebox.de/inaktiv/burg-waechter-kg/',
+          produkty:  'https://burg.biz/blogs/news',
+          aktuality: 'https://www.pressebox.de/pressemitteilungen/burg-waechter-kg/',
           blog:      'https://burg.biz/blogs/news',
         },
-        q:'BURG-WÄCHTER trezory sejfy nové produkty aktuality pressebox 2025 2026'
+        q:'BURG-WÄCHTER trezor sejf safe new products site:burg.biz OR site:pressebox.de 2025 2026'
       },
       { id:'rottner', name:'Rottner', tag:'DE trezory',
         sources: {
@@ -707,9 +707,11 @@ Proveď 3 oddělená web_search hledání pro značku ${b.name}:
 3. BLOG / ČLÁNKY — hledej na ${src.blog||'webu výrobce'}: odborné články, průvodce, tipy od ${sixMonthsAgo}
    Dotaz: ${b.q} blog article guide tip ${today.slice(0,4)}
 
-DŮLEŽITÉ: Použij web_search nástroj. Vyřaď vše starší než ${sixMonthsAgo}. Uváděj datum pokud je dostupné.
+DŮLEŽITÉ: Použij web_search nástroj. Vyřaď vše starší než ${sixMonthsAgo}.
 
-Výstup — pouze tyto řádky:
+Datum je POVINNÉ — vždy vyplň YYYY-MM. Pokud přesné datum nenajdeš, odhadni z kontextu (rok z URL, nadpisu nebo vyhledávání). Nikdy nenechávej datum prázdné.
+
+Výstup — pouze tyto řádky, nic jiného:
 PRODUKT: [název] | [1 věta popis] | [URL] | [URL obrázku nebo prázdné] | [datum YYYY-MM]
 AKTUALITA: [název] | [1 věta popis] | [URL] | [URL obrázku nebo prázdné] | [datum YYYY-MM]
 BLOG: [název] | [1 věta popis] | [URL] | [URL obrázku nebo prázdné] | [datum YYYY-MM]
