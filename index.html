@@ -628,9 +628,36 @@ function toggleCh(btn){
 }
 
 // ══════════════ CLAUDE API ══════════════
-async function claudeCall(prompt,maxTokens=1200){
-  const r=await fetch('https://wandering-dawn-f3c1.oskrebsky.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
-  const d=await r.json();
+const WORKER = 'https://wandering-dawn-f3c1.oskrebsky.workers.dev';
+
+// Sonnet — pro generování obsahu
+async function claudeCall(prompt, maxTokens=1200){
+  const r = await fetch(WORKER, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+    model:'claude-sonnet-4-20250514', max_tokens:maxTokens,
+    tools:[{type:'web_search_20250305',name:'web_search'}],
+    messages:[{role:'user',content:prompt}]
+  })});
+  const d = await r.json();
+  if(d.type==='error') throw new Error(d.error?.message||'API error');
+  return d.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n')||'';
+}
+
+// Haiku — pro news fetching (vyšší rate limity, rychlejší)
+async function claudeCallFast(prompt, maxTokens=1000, attempt=0){
+  const r = await fetch(WORKER, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+    model:'claude-haiku-4-5-20251001', max_tokens:maxTokens,
+    tools:[{type:'web_search_20250305',name:'web_search'}],
+    messages:[{role:'user',content:prompt}]
+  })});
+  const d = await r.json();
+  if(d.type==='error'){
+    // retry on overload (max 2 retries)
+    if((d.error?.type==='overloaded_error'||r.status===529) && attempt<2){
+      await new Promise(res=>setTimeout(res, 3000*(attempt+1)));
+      return claudeCallFast(prompt, maxTokens, attempt+1);
+    }
+    throw new Error(d.error?.message||'API error');
+  }
   return d.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n')||'';
 }
 
@@ -645,7 +672,7 @@ async function fetchViaAI(){
   fetchedTitle='';fetchedContent='';fetchedImageUrl='';
   try{
     const today = new Date().toISOString().slice(0,10);
-    const text=await claudeCall(`Dnešní datum je ${today}. Přečti tuto stránku pomocí web search a extrahuj aktuální informace: ${url}\n\nPoužij web_search nástroj — nehledej ve své paměti.\nFormát:\nNÁZEV: [název]\nPOPIS: [3-6 vět]\nCENA: [nebo "není"]\nCERTIFIKACE: [nebo "není"]\nOBRÁZEK: [přímá https:// URL obrázku nebo "žádný"]\nKLÍČOVÉ BODY: [3-5 bodů oddělených |]`);
+    const text=await claudeCallFast(`Dnešní datum je ${today}. Přečti tuto stránku pomocí web search a extrahuj aktuální informace: ${url}\n\nPoužij web_search nástroj — nehledej ve své paměti.\nFormát:\nNÁZEV: [název]\nPOPIS: [3-6 vět]\nCENA: [nebo "není"]\nCERTIFIKACE: [nebo "není"]\nOBRÁZEK: [přímá https:// URL obrázku nebo "žádný"]\nKLÍČOVÉ BODY: [3-5 bodů oddělených |]`);
     const g=(k)=>{const m=text.match(new RegExp(k+':\\s*(.+)','i'));return m?m[1].trim():'';};
     fetchedTitle=g('NÁZEV')||url;
     fetchedContent=`Název: ${g('NÁZEV')}\nPopis: ${g('POPIS')}\nCena: ${g('CENA')}\nCertifikace: ${g('CERTIFIKACE')}\nKlíčové body: ${g('KLÍČOVÉ BODY')}`;
@@ -693,7 +720,7 @@ async function fetchBrand(brand, silent=false){
     const sixMonthsAgo = new Date(Date.now() - 182*24*60*60*1000).toISOString().slice(0,7);
     const src = b.sources || {};
 
-    const text = await claudeCall(
+    const text = await claudeCallFast(
 `Dnešní datum je ${today}. Hledáme obsah od ${sixMonthsAgo} do dnes (posledních 6 měsíců). Prohledej i produktové novinky.
 
 Proveď 3 oddělená web_search hledání pro značku ${b.name}:
@@ -716,7 +743,7 @@ PRODUKT: [název] | [1 věta popis] | [URL] | [URL obrázku nebo prázdné] | [d
 AKTUALITA: [název] | [1 věta popis] | [URL] | [URL obrázku nebo prázdné] | [datum YYYY-MM]
 BLOG: [název] | [1 věta popis] | [URL] | [URL obrázku nebo prázdné] | [datum YYYY-MM]
 
-Max 4 výsledky každého typu. Jen řádky začínající PRODUKT:, AKTUALITA: nebo BLOG:.`, 3000);
+Max 4 výsledky každého typu. Jen řádky začínající PRODUKT:, AKTUALITA: nebo BLOG:.`, 2000);
     // parse all 3 types
     const allLines = text.split('\n').filter(l => /^(PRODUKT|AKTUALITA|BLOG):/.test(l.trim()));
     const typeMap = { 'PRODUKT':'🛍️ Produkt', 'AKTUALITA':'📰 Aktualita', 'BLOG':'✍️ Blog' };
@@ -758,7 +785,7 @@ async function autoFetchImages(items, b){
   if(!noImg.length) return;
   const urlList = noImg.map((item, i) => `${i+1}. ${item.url}`).join('\n');
   try{
-    const text = await claudeCall(
+    const text = await claudeCallFast(
 `Pro každou URL níže navštiv stránku a najdi URL hlavního obrázku (og:image meta tag nebo první velký obrázek produktu/článku). Odpověz POUZE ve formátu číslo: URL (nebo "žádný"):\n${urlList}`, 400);
     text.split('\n').forEach(line => {
       const m = line.match(/^(\d+):\s*(https?:\/\/\S+)/);
@@ -835,7 +862,7 @@ function showArtList(items, b, fromCache){
           fetchBtn.textContent = '⏳';
           try{
             const today = new Date().toISOString().slice(0,10);
-            const fullText = await claudeCall(
+            const fullText = await claudeCallFast(
 `Dnešní datum: ${today}. Přečti tento článek/stránku pomocí web_search nebo web_fetch: ${item.url}
 
 Extrahuj:
